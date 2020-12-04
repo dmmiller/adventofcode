@@ -39,13 +39,6 @@ class Passport:
                 return False
         return True
 
-    def dump(self):
-        values = []
-        for key in sorted(self._properties.keys()):
-            if key != "cid":
-                values.append((key, self._properties[key]))
-        return values
-
 file = open('input.txt')
 lines = list(map(lambda x : x.strip(), file.readlines()))
 index = 0
