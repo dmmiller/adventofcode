@@ -13,13 +13,13 @@ class Ticket:
     
     @property
     def row(self):
-        if not self._row:
+        if self._row == None:
             self._row = int(self._code[:7].replace("F","0").replace("B","1"), base=2)
         return self._row
 
     @property
     def column(self):
-        if not self._column:
+        if self._column == None:
             self._column = int(self._code[-3:].replace("L","0").replace("R", "1"), base=2)
         return self._column
     
