@@ -1,7 +1,7 @@
 file = open('input.txt')
 numbers = set(map(int, file.readlines()))
 for num in numbers:
-    if 2020 - num in numbers:
+    if 2020 - num in numbers and num != 2020 - num:
         print("Found the number pair ", num, 2020 - num, " with product : ", num * (2020 - num))
         break
 
