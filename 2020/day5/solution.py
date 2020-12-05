@@ -1,32 +1,24 @@
 import itertools
 
 class Ticket:
-    _row = None
-    _column = None
 
-    def __init__(self, code):
-        self._code = code
+    def __init__(self, row, column):
+        self.row = row
+        self.column = column
     
     @property
     def seat_id(self):
         return self.row * 8  + self.column
     
-    @property
-    def row(self):
-        if self._row == None:
-            self._row = int(self._code[:7].replace("F","0").replace("B","1"), base=2)
-        return self._row
+    @classmethod
+    def from_code(cls, code):
+        row, column = code[:7], code [-3:]
+        return Ticket(int(row.replace("F","0").replace("B","1"), base=2), int(column.replace("L","0").replace("R", "1"), base=2))
 
-    @property
-    def column(self):
-        if self._column == None:
-            self._column = int(self._code[-3:].replace("L","0").replace("R", "1"), base=2)
-        return self._column
-    
 with open('input.txt') as f:
-    tickets = [Ticket(line.strip()) for line in f]
+    tickets = [Ticket.from_code(line.strip()) for line in f]
     max_id = max(ticket.seat_id for ticket in tickets)
-    print("Max Seat ID for flight is :", max_id)
+    print(f"Max Seat ID for flight is : {max_id}")
 
     sorted_tickets = sorted(tickets, key=lambda x : x.row)
     grouped_seats = itertools.groupby(sorted_tickets, lambda x: x.row)
@@ -37,5 +29,5 @@ with open('input.txt') as f:
         if len(ticket_list) == 7:
             # columns should sum to 28 (0..7) so missing column is 28 - sum
             missing_column = 28 - sum(ticket.column for ticket in ticket_list)
-            print("Missing ticket is", row, missing_column, " with ID", row * 8 + missing_column)
+            print(f"Missing ticket is ({row}, {missing_column}) with ID : {Ticket(row, missing_column).seat_id}")
             break
