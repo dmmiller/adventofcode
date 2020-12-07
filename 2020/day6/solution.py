@@ -1,12 +1,11 @@
 import functools
-import operator
 
 class Person:
 
     @classmethod
     def from_line(cls, line):
         person = Person()
-        person.set = set(c for c in line)
+        person.set = set(line)
         return person
 
 class Group:
@@ -18,11 +17,11 @@ class Group:
         self.people.append(person)
 
     def get_anyone_answer_count(self):
-        merged_set = functools.reduce(operator.or_, (p.set for p in self.people))
+        merged_set = functools.reduce(set.union, (p.set for p in self.people))
         return len(merged_set)
     
     def get_everyone_answer_count(self):
-        merged_set = functools.reduce(operator.and_, (p.set for p in self.people))
+        merged_set = functools.reduce(set.intersection, (p.set for p in self.people))
         return len(merged_set)
 
 with open('input.txt') as f:
@@ -38,7 +37,7 @@ with open('input.txt') as f:
             groups.append(active_group)
             active_group = Group()
     groups.append(active_group)
-    total_anyone = sum((group.get_anyone_answer_count() for group in groups))
-    total_everyone = sum((group.get_everyone_answer_count() for group in groups))
+    total_anyone = sum(group.get_anyone_answer_count() for group in groups)
+    total_everyone = sum(group.get_everyone_answer_count() for group in groups)
     print(f"The total of counts that anyone answered is {total_anyone}")
     print(f"The total of counts that everyone answered is {total_everyone}")
