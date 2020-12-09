@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import typing
 from collections.abc import Iterable, Callable
@@ -13,7 +14,7 @@ class Machine:
         self.acc += value
         return 1
 
-    INSTRUCTION_TABLE : dict[str, Callable[['Machine',int], int]] = {
+    INSTRUCTION_TABLE : dict[str, Callable[[Machine,int], int]] = {
         'acc' : _acc,
         'jmp' : lambda self, x: x,
         'nop' : lambda self, x: 1,
@@ -30,10 +31,10 @@ class Machine:
             executed_instructions.add(self.ip)
             if self.ip >= len(self.instructions):
                 return True
-            self.ip += self.execute_instruction(self.ip)
+            self.ip += self._execute_instruction(self.ip)
         return False
 
-    def execute_instruction(self, ip : int) -> int:
+    def _execute_instruction(self, ip : int) -> int:
         operation, value = self.instructions[ip]
         func = self.INSTRUCTION_TABLE[operation]
         return func(self, value)
@@ -50,12 +51,12 @@ class Machine:
     def repair(self) -> int:
         for i in range(len(self.instructions)):
             old_operation, value = self.instructions[i]
-            if old_operation == "acc":
-                continue
-            if old_operation == "nop":
+            if old_operation == "jmp":
+                new_operation = "nop"
+            elif old_operation == "nop":
                 new_operation = "jmp"
             else:
-                new_operation = "nop"
+                continue
             self.instructions[i] = (new_operation, value)
             if self.execute():
                 print(f"Changed instruction {i} from ({old_operation} {value}) to ({new_operation} {value})")
@@ -63,10 +64,10 @@ class Machine:
             self.instructions[i] = (old_operation, value)
         return None
 
-    @classmethod
-    def parse_instruction(cls, line : str) -> Instruction:
+    @staticmethod
+    def parse_instruction(line : str) -> Instruction:
         match = instruction_re.match(line)
-        return (match.group('instruction'), int(match.group('value')))
+        return (match['instruction'], int(match['value']))
 
 
 with open('input.txt') as f:
