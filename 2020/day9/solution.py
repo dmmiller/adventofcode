@@ -1,12 +1,8 @@
 
 def find_first_exception(numbers: list[int], lookback_count : int) -> int:
     window = set(numbers[:lookback_count])
-
-    def window_sums_to_value(window, value):
-        return any((value - x in window and value - x != x) for x in window)
-
     for i in range(lookback_count, len(numbers)):
-        if not window_sums_to_value(window, numbers[i]):
+        if not any((numbers[i] - x in window and numbers[i] - x != x) for x in window):
             return numbers[i]
         window.remove(numbers[i - lookback_count])
         window.add(numbers[i])
@@ -27,7 +23,7 @@ def find_weakness(numbers : list[int], key : int) -> int:
 
 with open('input.txt') as f:
     numbers = [int(line.strip()) for line in f]
-    key = find_first_exception(numbers, 25)
-    print(f"First number that fails is {key}")
-    weakness = find_weakness(numbers, key)
-    print(f"The weakness is {weakness}")
+key = find_first_exception(numbers, 25)
+print(f"First number that fails is {key}")
+weakness = find_weakness(numbers, key)
+print(f"The weakness is {weakness}")
