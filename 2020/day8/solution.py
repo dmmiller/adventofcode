@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 import typing
-from collections.abc import Iterable, Callable
+from collections.abc import Iterable, Callable, Generator
 
 #Type Information
 Instruction = tuple[str, int]
@@ -24,15 +24,11 @@ class Machine:
         self.instructions = list(instructions)
         self.reset()
 
-    def execute(self) -> bool:
+    def execute(self) -> Generator[int, None, None]:
         self.reset()
-        executed_instructions = set()
-        while self.ip not in executed_instructions:
-            executed_instructions.add(self.ip)
-            if self.ip >= len(self.instructions):
-                return True
+        while self.ip < len(self.instructions):
+            yield self.ip
             self.ip += self._execute_instruction(self.ip)
-        return False
 
     def _execute_instruction(self, ip : int) -> int:
         operation, value = self.instructions[ip]
@@ -43,8 +39,16 @@ class Machine:
         self.ip = 0
         self.acc = 0
 
+    def execute_without_looping(self) -> bool:
+        executed_instructions = set()
+        for ip in self.execute():
+            if ip in executed_instructions:
+                return False
+            executed_instructions.add(ip)
+        return True
+
     def find_accumulator_before_loop(self) -> int:
-        if not self.execute():
+        if not self.execute_without_looping():
             return self.acc
         return None
 
@@ -58,7 +62,7 @@ class Machine:
             else:
                 continue
             self.instructions[i] = (new_operation, value)
-            if self.execute():
+            if self.execute_without_looping():
                 print(f"Changed instruction {i} from ({old_operation} {value}) to ({new_operation} {value})")
                 return self.acc
             self.instructions[i] = (old_operation, value)
