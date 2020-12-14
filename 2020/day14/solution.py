@@ -1,15 +1,17 @@
+from __future__ import  annotations
 from functools import reduce
 import re
+from typing import Generator
 
 mask_re = re.compile(r"mask = (?P<value>\w{36})")
 mem_re = re.compile(r"mem\[(?P<address>\d+)\] = (?P<value>\d+)")
 
-def apply_value_mask(mask, value):
+def apply_value_mask(mask : str, value : int) -> int:
     mask_1s = int(mask.replace("X", "1"), base=2)
     mask_0s = int(mask.replace("X", "0"), base=2)
     return (value & mask_1s) | mask_0s
 
-def apply_memory_mask(mask, value):
+def apply_memory_mask(mask : str, value : int) -> str:
     bin_value = list('{0:036b}'.format(value))
     for i in range(len(mask)):
         if mask[i] == '1':
@@ -18,8 +20,8 @@ def apply_memory_mask(mask, value):
             bin_value[i] = 'X'
     return ''.join(bin_value)
 
-def generate_addresses(mask, address):
-    def inner_generator(address):
+def generate_addresses(mask : str, address : int) -> Generator[int, None, None]:
+    def inner_generator(address : str) -> Generator[int, None, None]:
         if 'X' not in address:
             yield int(address, base=2)
         else:
