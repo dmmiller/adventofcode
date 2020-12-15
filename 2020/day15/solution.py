@@ -1,28 +1,26 @@
 from __future__ import  annotations
 
-input = [15,5,1,4,7,0]
-
-def find_nth_number(starting : list[int], nth : int) -> int:
-    last_spoken = { value : [index] for index, value in enumerate(starting)}
-    round = len(starting)
-    last_number = starting[-1]
-    while round < nth:
-        if len(last_spoken[last_number]) == 1:
-            last_number = 0
-        elif len(last_spoken[last_number]) == 2:
-            penultimate, ultimate = last_spoken[last_number]
-            last_number = ultimate - penultimate
+def find_nth_number(starting: list[int], nth: int) -> int:
+    last_spoken = {}
+    next_number = 0
+    gap = None
+    for i in range(nth):
+        if i < len(starting):
+            next_number = starting[i]
+        elif gap:
+            next_number = gap
         else:
-            print("OOPS")
-            return -1
-        if last_number not in last_spoken:
-            last_spoken[last_number] = []
-        last_spoken[last_number].append(round)
-        last_spoken[last_number] = last_spoken[last_number][-2:]
-        round += 1
-    return last_number
+            next_number = 0
 
-number = find_nth_number(input, 2020)
+        if next_number in last_spoken:
+            gap = i - last_spoken[next_number]
+        else:
+            gap = None
+        last_spoken[next_number] = i
+    return next_number
+
+starting_sequence = [15,5,1,4,7,0]
+number = find_nth_number(starting_sequence, 2020)
 print(f"The 2020th number is {number}")
-number = find_nth_number(input, 30000000)
+number = find_nth_number(starting_sequence, 30000000)
 print(f"The 30000000th number is {number}")
