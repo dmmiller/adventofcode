@@ -4,15 +4,17 @@ from abc import ABCMeta, abstractmethod
 
 class Expression(metaclass=ABCMeta):
     @abstractmethod
-    def match(self, expressions: dict[int, Expression], string: str, i: int) -> int:
+    def match(self, expressions: Grammar, string: str, i: int) -> int:
         pass
+
+Grammar = dict[int, Expression]
 
 class SequenceExpression(Expression):
     def __init__(self, _id: int, sequence: list[int]):
         self._id = _id
         self.sequence = sequence
 
-    def match(self, expressions: dict[int, Expression], string: str, i: int) -> int:
+    def match(self, expressions: Grammar, string: str, i: int) -> int:
         for expr_id in self.sequence:
             expr = expressions[expr_id]
             i = expr.match(expressions, string, i)
@@ -26,7 +28,7 @@ class OrExpression(Expression):
         self.lhs = lhs
         self.rhs = rhs
 
-    def match(self, expressions: dict[int, Expression], string: str, i: int) -> int:
+    def match(self, expressions: Grammar, string: str, i: int) -> int:
         original_i = i
         i = self.lhs.match(expressions, string, i)
         if i != -1:
@@ -39,35 +41,35 @@ class LiteralExpression(Expression):
         self._id = _id
         self.literal = literal
 
-    def match(self, expressions: dict[int, Expression], string: str, i: int) -> int:
+    def match(self, expressions: Grammar, string: str, i: int) -> int:
         if string[i:i+(len(self.literal))] == self.literal:
-            return i + len(self.literal) 
-        return -1
+            return i + len(self.literal)
+        else:
+            return -1
 
 def yield_block(f: IO) -> Iterator[str]:
     while (line := f.readline().strip()) != "":
         yield line
 
-def build_rules(rules: Iterator[str]) -> dict[int, Expression]:
-    rules_map = {}
+def build_rules(rules: Iterator[str]) -> Grammar:
+    expressions_map = {}
     for rule in rules:
         rule_id, rule = rule.split(":")
-        rules_map[int(rule_id)] = [term for term in rule.strip().split(" ")]
-    complete_expresssions = {}
-    for k, v in rules_map.items():
-        if '"' in v[0]:
-            complete_expresssions[k] = LiteralExpression(k, v[0][1:-1])
+        rule_id = int(rule_id)
+        terms = [term for term in rule.strip().split(" ")]
+        if '"' in terms[0]:
+            expressions_map[rule_id] = LiteralExpression(rule_id, terms[0][1:-1])
         else:
-            if "|" in v:
-                or_index = v.index('|')
-                lhs = SequenceExpression(k, [int(term) for term in v[:or_index]])
-                rhs = SequenceExpression(k, [int(term) for term in v[or_index + 1:]])
-                complete_expresssions[k] = OrExpression(k, lhs, rhs)
+            if "|" in terms:
+                or_index = terms.index('|')
+                lhs = SequenceExpression(rule_id, [int(term) for term in terms[:or_index]])
+                rhs = SequenceExpression(rule_id, [int(term) for term in terms[or_index + 1:]])
+                expressions_map[rule_id] = OrExpression(rule_id, lhs, rhs)
             else:
-                complete_expresssions[k] = SequenceExpression(k, [int(term) for term in v])
-    return complete_expresssions
+                expressions_map[rule_id] = SequenceExpression(rule_id, [int(term) for term in terms])        
+    return expressions_map
 
-def matches(rules: dict[int, Expression], start: int, message: str) -> bool:
+def matches(rules: Grammar, start: int, message: str) -> bool:
     top_level_expression = rules[start]
     return top_level_expression.match(rules, message, 0) == len(message)
 
