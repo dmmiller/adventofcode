@@ -2,42 +2,41 @@ from __future__ import annotations
 from collections import Counter
 import re
 
-food_re = re.compile(r"(?P<ingredients>.*) \(contains (?P<allergens>.*)\)")
+FOOD_RE = re.compile(r"(?P<ingredients>.*) \(contains (?P<allergens>.*)\)")
 
 def get_ingredients_and_allergens(line: str) -> tuple[set[str], set[str]]:
-    match = food_re.match(line)
-    ingredients = set(ingredient.strip() for ingredient in match['ingredients'].split(' '))
-    allergens = set(ingredient.strip() for ingredient in match['allergens'].split(','))
+    match = FOOD_RE.match(line)
+    ingredients = set(ingredient for ingredient in match['ingredients'].split(' '))
+    allergens = set(allergen for allergen in match['allergens'].split(', '))
     return (ingredients, allergens)
 
 def produce_allergen_list(allergen_map: dict[str, set[str]]) -> str:
-    locked = {}
-    while len(allergen_map) > 0:
-        removed_item = ''
-        for k, v in allergen_map.items():
-            if len(v) == 1:
-                removed_item = v.pop()
-                locked[k] = removed_item
-                del allergen_map[k]
-                break
-        for k, v in allergen_map.items():
-            if removed_item in v:
-                v.remove(removed_item)
+    unique_allergen_map = determine_unique_allergens(allergen_map)
+    return ','.join(unique_allergen_map[key] for key in sorted(unique_allergen_map.keys()))
 
-    return ','.join(locked[key] for key in sorted(locked.keys()))
+def determine_unique_allergens(allergen_map: dict[str, set[str]]) -> dict[str, str]:
+    unique_allergen_map = {}
+    while len(unique_allergen_map) != len(allergen_map):
+        for allergen, possible_ingredients in allergen_map.items():
+            if allergen in unique_allergen_map:
+                continue
+            remaining_possible_ingredients = [ingredient for ingredient in possible_ingredients if ingredient not in unique_allergen_map.values()]
+            if len(remaining_possible_ingredients) == 1:
+                unique_allergen_map[allergen] = remaining_possible_ingredients[0]
+    return unique_allergen_map
     
-all_ingredients_counter = Counter()
+ingredients_count = Counter()
 allergen_map = {}
 
 with open('input.txt') as f:
     for line in f.readlines():
         ingredients, allergens = get_ingredients_and_allergens(line.strip())
-        all_ingredients_counter.update(ingredients)
+        ingredients_count.update(ingredients)
         for allergen in allergens:
             if allergen not in allergen_map:
                 allergen_map[allergen] = set(ingredients)
-            allergen_map[allergen] = allergen_map[allergen].intersection(ingredients)
-    possible_allergens = set(allergen for allergens in allergen_map.values() for allergen in allergens)
-    total_impossible_ingredients = sum(v for k, v in all_ingredients_counter.items() if k not in possible_allergens)
+            allergen_map[allergen] &= ingredients
+    possible_allergens = set.union(*allergen_map.values())
+    total_impossible_ingredients = sum(v for k, v in ingredients_count.items() if k not in possible_allergens)
     print(f"The total number of ingredients which can't contain allergens is {total_impossible_ingredients}")
     print(f"The dangerous ingredient list is {produce_allergen_list(allergen_map)}")
