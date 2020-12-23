@@ -28,7 +28,7 @@ def move(node_map: dict[int, LLNode], current_node: LLNode, max_number: int) -> 
     next3 = current_node.next.next.next.value
 
     destination_cup = current_cup
-    while destination_cup == current_cup or destination_cup == next1 or destination_cup == next2 or destination_cup == next3:
+    while destination_cup in [current_cup, next1, next2, next3]:
         destination_cup = destination_cup - 1
         if destination_cup < 1:
             destination_cup = max_number
