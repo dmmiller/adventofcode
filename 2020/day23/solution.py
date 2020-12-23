@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import deque
 import time
 
 class DLLNode:
@@ -56,7 +55,7 @@ def label(node_map: dict[int, DLLNode]) -> str:
         temp = temp.next
     return label
 
-def multiple_post_one3(node_map: dict[int, DLLNode]) -> int:
+def multiple_of_next_two(node_map: dict[int, DLLNode]) -> int:
     node1 = node_map[1]
     return node1.next.value * node1.next.next.value
 
@@ -86,5 +85,5 @@ node_map = build_map(start_node)
 max_number = max(cups)
 for i in range(moves):
     start_node = move(node_map, start_node, max_number)
-print(f"The final multiple for Part 2 after {moves} moves is {multiple_post_one3(node_map)}")
+print(f"The final multiple for Part 2 after {moves} moves is {multiple_of_next_two(node_map)}")
 print(f"{moves} took {time.time() - start_time} seconds")
