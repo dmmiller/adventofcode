@@ -1,21 +1,19 @@
 from __future__ import annotations
 import time
 
-class DLLNode:
+class LLNode:
 
     def __init__(self, value:int):
         self.value = value
         self.next =  None
-        self.previous = None
 
-def build_list(cups: list[int]) -> DLLNode:
-    nodes = [DLLNode(cup) for cup in cups]
+def build_list(cups: list[int]) -> LLNode:
+    nodes = [LLNode(cup) for cup in cups]
     for i in range(len(nodes)):
         nodes[i].next = nodes[(i + 1) % len(nodes)]
-        nodes[i].previous = nodes[(i - 1) % len(nodes)]
     return nodes[0]
 
-def build_map(start: DLLNode) -> dict[int,DLLNode]:
+def build_map(start: LLNode) -> dict[int,LLNode]:
     node_map = {}
     node = start
     while node.value not in node_map:
@@ -23,7 +21,7 @@ def build_map(start: DLLNode) -> dict[int,DLLNode]:
         node = node.next
     return node_map
 
-def move(node_map: dict[int, DLLNode], current_node: DLLNode, max_number: int) -> DLLNode:
+def move(node_map: dict[int, LLNode], current_node: LLNode, max_number: int) -> LLNode:
     current_cup = current_node.value
     next1 = current_node.next.value
     next2 = current_node.next.next.value
@@ -39,14 +37,13 @@ def move(node_map: dict[int, DLLNode], current_node: DLLNode, max_number: int) -
     triple_start = current_node.next
     triple_end = current_node.next.next.next
 
-    triple_start.previous = destination_node
     current_node.next = triple_end.next
     triple_end.next = destination_node.next
     destination_node.next = triple_start
 
     return current_node.next
 
-def label(node_map: dict[int, DLLNode]) -> str:
+def label(node_map: dict[int, LLNode]) -> str:
     node1 = node_map[1]
     label = ""
     temp = node1.next
@@ -55,7 +52,7 @@ def label(node_map: dict[int, DLLNode]) -> str:
         temp = temp.next
     return label
 
-def multiple_of_next_two(node_map: dict[int, DLLNode]) -> int:
+def multiple_of_next_two(node_map: dict[int, LLNode]) -> int:
     node1 = node_map[1]
     return node1.next.value * node1.next.next.value
 
