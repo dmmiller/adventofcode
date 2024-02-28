@@ -12,9 +12,7 @@ def computeLength(s: str) -> int:
         if len(stack) == 0:
             stack.append(c)
         else:
-            lUpper = stack[-1].isupper()
-            rUpper = c.isupper()
-            if lUpper != rUpper and stack[-1].upper() == c.upper():
+            if abs(ord(c) - ord(stack[-1])) == 32:
                 stack.pop()
             else:
                 stack.append(c)
