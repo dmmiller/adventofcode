@@ -47,8 +47,73 @@ for y in range(height):
         if newPoint[0] < 0 or newPoint[0] >= height or newPoint[1] < 0 or newPoint[1] >= width or grid[newPoint[0]][newPoint[1]] != cell:
           perimeters[name] += 1
 
-
-# for k in areas.keys():
-#   print("region ", k, " has area ", len(areas[k]), " and perimeter ", perimeters[k])
-
 print("Part 1 solution is ", sum(len(v) * perimeters[k] for k, v in areas.items()))
+
+def sideCount(points: set[Point]) -> int:
+  miny = min(points, key=lambda p: p[0])[0]
+  maxy = max(points, key=lambda p: p[0])[0]
+  minx = min(points, key=lambda p: p[1])[1]
+  maxx = max(points, key=lambda p: p[1])[1]
+  count = 0
+  for y in range (miny, maxy + 2):
+    growingSide = False
+    for x in range(minx, maxx + 1):
+      isAboveInPoints = (y - 1, x) in points
+      isLeftinPoints = (y, x - 1) in points
+      if (y, x) in points:
+        if growingSide and isAboveInPoints:
+          growingSide = False
+        elif growingSide and not isAboveInPoints:
+          if not isLeftinPoints:
+            count += 1
+        elif not growingSide and isAboveInPoints:
+          pass
+        elif not growingSide and not isAboveInPoints:
+          growingSide = True
+          count += 1
+      else:
+        if growingSide and isAboveInPoints:
+          if isLeftinPoints:
+            count += 1
+        elif growingSide and not isAboveInPoints:
+          growingSide = False
+        elif not growingSide and isAboveInPoints:
+          growingSide = True
+          count += 1
+        elif not growingSide and not isAboveInPoints:
+          pass
+
+  for x in range(minx, maxx + 2):
+    growingSide = False
+    for y in range (miny, maxy + 1):
+      isLeftInPoints = (y, x - 1) in points
+      isAboveInPoints = (y - 1, x) in points
+      if (y, x) in points:
+        if growingSide and isLeftInPoints:
+          growingSide = False
+        elif growingSide and not isLeftInPoints:
+          if not isAboveInPoints:
+            count += 1
+        elif not growingSide and isLeftInPoints:
+          pass
+        elif not growingSide and not isLeftInPoints:
+          growingSide = True
+          count += 1
+      else:
+        if growingSide and isLeftInPoints:
+          if isAboveInPoints:
+            count += 1
+        elif growingSide and not isLeftInPoints:
+          growingSide = False
+        elif not growingSide and isLeftInPoints:
+          growingSide = True
+          count += 1
+        elif not growingSide and not isLeftInPoints:
+          pass
+
+  return count
+
+# for k, v in areas.items():
+#   print("region ", k, " has area ", len(v), " and side count ", sideCount(v))
+
+print("Part 2 solution is ", sum(len(v) * sideCount(v) for v in areas.values()))
