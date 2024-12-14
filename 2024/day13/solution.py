@@ -41,17 +41,30 @@ for machine in rawMachines:
   machines.append([aButton, bButton, prize])
 
 def findMinToken(a: Button, b: Button, p: Prize) -> int:
-  x = 0
-  y = 0
-  minCost = 1000
-  for i in range(101):
-    for j in range(101):
-      if i * a[0] + j * b[0] == p[0] and i * a[1] + j * b[1] == p[1]:
-        if 3 * i + j < minCost:
-          minCost = 3 * i + j
-  if minCost == 1000:
+  # equation we are solving
+  # a[0] * A + b[0] * B = p[0]
+  # a[1] * A + b[1] * B = p[1]
+  # cancel the A term
+  # a[1] * ( a[0] * A + b[0] * B )  = a[1] * p[0]
+  # a[0] * ( a[1] * A + b[1] * B ) = a[0] * p[1]
+  # a[1] * b[0] * B - a[0] * b[1] * B = a[1] * p[0] - a[0] * p[1]
+  # group the B term
+  # (a[1] * b[0] - a[0] * b[1]) * B = a[1] * p[0] - a[0] * p[1]
+  # isolate the B
+  # B = ( a[1] * p[0] - a[0] * p[1] ) / (a[1] * b[0] - a[0] * b[1])
+  # Now find A
+  # a[0] * A + b[0] * B = p[0]
+  # a[0] * A = p[0] - b[0] * B
+  # A = (p[0] - b[0] * B) / a[0]
+
+  B = ( a[1] * p[0] - a[0] * p[1] ) // (a[1] * b[0] - a[0] * b[1])
+  A = (p[0] - b[0] * B) // a[0]
+
+  # verify we didn't round to the solution but hit exact
+  if A * a[0] + B * b[0] != p[0] or A * a[1] + B * b[1] != p[1]:
     return -1
-  return minCost
+
+  return 3 * A + B
 
 total = 0
 for machine in machines:
@@ -61,10 +74,10 @@ for machine in machines:
 
 print("Part 1 solution is ", total)
 
-# total = 0
-# for machine in machines:
-#   cost = findMinToken(machine[0], machine[1], machine[2] + 10000000000000)
-#   if cost != -1:
-#     total += cost
+total = 0
+for machine in machines:
+  cost = findMinToken(machine[0], machine[1], (machine[2][0] + 10000000000000, machine[2][1] + 10000000000000))
+  if cost != -1:
+    total += cost
 
-# print("Part 2 solution is ", total)
+print("Part 2 solution is ", total)
