@@ -61,5 +61,33 @@ def computeSafetyFactor(robots: list[Robot]) -> int:
   return score
 
 translatedRobots = [moveRobot(robot, 100) for robot in robots]
-
 print("Part 1 solution is ", computeSafetyFactor(translatedRobots))
+
+# This is just an assumption that all the robots have to be in a
+# separate location when the tree is assembled.  That any overlap
+# can't be, and that the first time they are all separate is the tree
+def isChristmasTree(robots: list[Robot]) -> bool:
+  locations : set[Position] = set()
+  for robot in robots:
+    locations.add(robot[0])
+  return len(locations) == len(robots)
+
+time = 0
+while not isChristmasTree(robots):
+  time += 1
+  robots = [moveRobot(robot, 1) for robot in robots]
+
+print("Part 2 solution is ", time)
+
+def printTree(robots: list[Robot]):
+  locations : set[Position] = set()
+  for robot in robots:
+    locations.add(robot[0])
+  for y in range(height):
+    for x in range(width):
+      if (y, x) in locations:
+        print("X", end="")
+      else:
+        print(".", end="")
+    print("")
+printTree(robots)
