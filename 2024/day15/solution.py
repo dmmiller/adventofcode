@@ -1,4 +1,5 @@
 from enum import Enum
+from itertools import chain
 
 data = """##########
 #..O..O.O#
@@ -22,8 +23,8 @@ vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
 ^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
 v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"""
 
-# with open("input.txt") as f:
-#   data = f.read()
+with open("input.txt") as f:
+  data = f.read()
 
 type Point = tuple[int, int]
 
@@ -118,8 +119,29 @@ def sumCoordinates2(boxes: dict[Point, Side]) -> int:
       total += 100 * box[1] + box[0]
   return total
 
+def printBoard(walls: set[Point], boxes: dict[Point, Side], robot: Point, move: str):
+  height = max(point[1] for point in walls) + 1
+  width = max(point[0] for point in walls) + 1
+  for y in range(height):
+    for x in range(width):
+      point: Point = (x, y)
+      if point in walls:
+        print("#", end="")
+      elif point in boxes:
+        if boxes[point] == Side.LEFT:
+          print("[", end="")
+        else:
+          print("]", end="")
+      elif point == robot:
+        print(move, end="")
+      else:
+        print(".", end="")
+    print("")
+  print("")
+
 def moveBoxes2(walls: set[Point], boxes: dict[Point, Side], robot: Point) -> dict[Point, Side]:
   for move in moves:
+    # printBoard(walls, boxes, robot, move)
     offset = moveMap[move]
     newPosition = (robot[0] + offset[0], robot[1] + offset[1])
     if newPosition in walls:
@@ -128,25 +150,61 @@ def moveBoxes2(walls: set[Point], boxes: dict[Point, Side], robot: Point) -> dic
       if offset[0] != 0:
         # pushing a row of boxes horizontally
         boxesToAdjust = [newPosition]
-        potentialEmptyPosition = (newPosition[0] + offset[0], newPosition[1] + offset[1])
+        potentialEmptyPosition = (newPosition[0] + offset[0], newPosition[1])
         while potentialEmptyPosition in boxes:
-          potentialEmptyPosition = (potentialEmptyPosition[0] + offset[0], potentialEmptyPosition[1] + offset[1])
           boxesToAdjust.append(potentialEmptyPosition)
+          potentialEmptyPosition = (potentialEmptyPosition[0] + offset[0], potentialEmptyPosition[1])
         if potentialEmptyPosition not in walls:
           for box in reversed(boxesToAdjust):
-            box[box[0]] = 1 # fix
-          boxes.remove(newPosition)
-          boxes.add(potentialEmptyPosition)
+            side = boxes[box]
+            del boxes[box]
+            boxes[(box[0] + offset[0], box[1])] = side
           robot = newPosition
       else:
         # pushing a box vertically which may push multiple
-        pass
+        left = newPosition[0]
+        right = newPosition[0]
+        if boxes[newPosition] == Side.LEFT:
+          right = right + 1
+        else:
+          left = left - 1
+        boxesToAdjust: list[Point] = []
+        fringe: list[Point] = [(left, newPosition[1]), (right, newPosition[1])]
+        while True:
+          potentialEmptyPositions = [(point[0], point[1] + offset[1]) for point in fringe]
+          if any(point in walls for point in potentialEmptyPositions):
+            # fringe hits wall so can not move
+           break
+          elif all(point not in boxes for point in potentialEmptyPositions):
+            # empty space at fringe so move robot
+            for box in reversed(list(chain(boxesToAdjust, fringe))):
+              side = boxes[box]
+              del boxes[box]
+              boxes[(box[0], box[1] + offset[1])] = side
+            robot = newPosition
+            break
+          else:
+            # hit at least one box
+            boxesToAdjust.extend(fringe)
+            fringe = []
+            for potentialEmptyPosition in potentialEmptyPositions:
+              if potentialEmptyPosition in boxes:
+                side = boxes[potentialEmptyPosition]
+                if side == Side.LEFT:
+                  left = potentialEmptyPosition
+                  right = (potentialEmptyPosition[0] + 1, potentialEmptyPosition[1])
+                else:
+                  left = (potentialEmptyPosition[0] - 1, potentialEmptyPosition[1])
+                  right = potentialEmptyPosition
+                if left not in fringe:
+                  fringe.append(left)
+                if right not in fringe:
+                  fringe.append(right)
     else:
       robot = newPosition
   return boxes
 
 walls, boxes, robot = buildMaze2(maze)
-print(boxes)
-# boxes = moveBoxes2(walls, boxes, robot)
+boxes = moveBoxes2(walls, boxes, robot)
 
 print("Part 2 solution is ", sumCoordinates2(boxes))
